@@ -1,0 +1,135 @@
+---
+title: "Developing Data Product Wee4 Project - BMI"
+author: "Nsi J."
+date: "22 juillet 2017"
+output: 
+  ioslides_presentation: 
+    keep_md: yes
+---
+## Project and goal   
+
+**The project has two parts**             
+- First, create a Shiny application and deploy it on Rstudio's servers and associated it with a supporting documentation.             
+- Second,use Slidify or Rstudio Presenter to prepare a reproducible pitch presentation about the application.          
+
+*How to for peer review on RPubs: Please mouse over until you see a hand to click to the next slide or press on descending arrow n times*
+
+## Documentation 
+
+**Description**
+
+The application is a web site that enable you to compute your Body Mass Indice BMC.
+The Body mass index (BMI) is a measure of body fat based on height and weight that applies to adult men and women.
+The presentation is done with R Markdown presentation which is made interactive using Shiny.
+
+**Format**   
+variables      
+- Height : a numerical type in centimeters   
+- Weight : a numerical type in kilograms   
+- Date : a date format formatted as yyyy-mm-dd   
+- Firstname : a character type 
+
+## HOW TO USE BMI APPLICATION
+**Step by step example**     
+*On the top of your screen : enter the values required*        
+- First Enter your height by moving the slider labelled Your Height (in centimeters) e.g 160
+- And Enter your weight by moving the slider labelled Your Weight (in kilograms) e.g 58
+- Then  Type your firsname in the textbox named Your Firstname, e.g James
+- And  Enter the date by selecting in the open calandar or type it in the field labbeled Date input: yyyy-mm-dd, e.g 2017-22-07
+- Finally See the results immediately
+
+*Under the values entered, you can then observe the results typed and computed*        
+- In the table, you have the values you are selecting(height, weight, date) or typing(firstname, date)   
+- Below the table,the data computed : 
+Your BMC is calculated when you finished to select your height and weight. It is displayed in the field named data.   
+Also, in the plot these 2 values of height and weight are displayed   
+Furthermore, the most you move the values with the 2 sliders, the most the results change both on data field. 
+The BMI is recalculated. 
+In the plot included, you can observe the changes on values for weight and height and their linked point, the red circle that corresponding. 
+
+## THE DISPLAY OF THE BMI APPLICATION     
+*YOU CAN TEST THE APP AND ENJOY*  
+```{r Compute_Body_Mass_Index,echo=FALSE,warning=FALSE, message=FALSE,fig.keep="all",fig.show="asis"}
+library(shiny)
+library(lubridate)
+library(plyr)
+library(plotly)
+
+# Define UI for slider the computation of body mass index(BMI) application
+ui<- fluidPage(
+  
+  #  Application title
+  titlePanel("Compute your Body Mass Index BMI"),
+  
+  # Sidebar with sliders on variables Weight in kilograms and height in centimeters
+  # options
+  sidebarLayout(
+    sidebarPanel(
+      # Enter the value of the height
+      sliderInput("height", label = h4("Your Height (in centimeters)"),
+                  min=50, max=300, value=100),
+      
+      # Enter the value of the weight
+      sliderInput("weight", label = h4("Your Weight (in kilograms)"),
+                  min=10, max = 500, value = 50),
+      
+      # Enter Firstname
+      textInput("firstname",label = h4("Your Firstname"), value ="Enter your firstname"),
+      
+      # Enter the date
+      dateInput("date",label = h5("Date input: yyyy-mm-dd"),
+                              value = "2017-07-20")
+      
+    ),
+  # Show a table summarizing the values entered
+    mainPanel(
+             tableOutput("values"),
+             tableOutput("CalcBMI"),
+             plotOutput("BMIPlot")
+             )      
+  )
+)
+
+# Server part code
+server <- function(input,output){
+  
+  # Reactive expression to compose a data frame containing all of
+  # the values
+  sliderValues <- reactive({
+   
+    # Compose data frame
+    data.frame(
+      Name = c("Height (in cm)", 
+               "Weight (in kgs)",
+               "Firstname"),
+               
+            Value = as.character(c(input$height, 
+                            input$weight,
+                            input$firstname)),
+      
+                      stringsAsFactors=FALSE)
+  })  
+# Show the values using an HTML table
+ output$values <- renderTable({
+  sliderValues()
+})
+ 
+ BMICalc <- reactive({
+ # compute the BMI
+ #input$weight <-50
+ #input$height <-150
+ CalcBMI <- (input$height/100)*(input$height/100)
+ CalcBMI <- input$weight/CalcBMI
+ })
+ 
+# Display the BMI computed
+ output$CalcBMI <- renderTable({BMICalc()
+ }) 
+ # Display the BMI Plot
+ output$BMIPlot <- renderPlot({
+   plot(x = input$weight, y = input$height,pch=9,lwd=10,col="red")
+    })
+ }
+# Run the application 
+shinyApp(ui = ui, server = server)
+
